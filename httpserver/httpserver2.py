@@ -22,6 +22,7 @@ class MyServer(BaseHTTPRequestHandler):
             filename = "templates/index.html"
         elif self.path == "/films":
             filename = "templates/films.html"
+
         else:
             filename = ""
 
