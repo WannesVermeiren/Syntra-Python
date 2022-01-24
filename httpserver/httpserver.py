@@ -2,7 +2,9 @@
 
 # Python 3 server example
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import time
+
+from lib import db
+from lib import functions
 
 hostName = "localhost"
 serverPort = 80
@@ -14,19 +16,54 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
-        if self.path == "/":
-            self.wfile.write(bytes("<html><head><title>https://pythonbasics.org</title></head>", "utf-8"))
-            self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
-            self.wfile.write(bytes("<body>", "utf-8"))
-            self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
-            self.wfile.write(bytes("</body></html>", "utf-8"))
-
         if self.path == "/hallo":
-            self.wfile.write(bytes("<html><head><title>https://pythonbasics.org</title></head>", "utf-8"))
-            self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
-            self.wfile.write(bytes("<body>", "utf-8"))
-            self.wfile.write(bytes("<p>Dit is de hallo pagina!!!</p>", "utf-8"))
-            self.wfile.write(bytes("</body></html>", "utf-8"))
+            filename = "templates/hallo.html"
+        elif self.path == "/":
+            filename = "templates/index.html"
+        elif self.path == "/films":
+            filename = "templates/films.html"
+            # added separate stylesheet logic
+        elif self.path[-4:] == ".css":
+
+        # print(self.path[-4:])
+        stylesheet = self.path[1:]
+        # print(stylesheet)
+        self.send_response(200)
+        self.send_header("Content-type", "text/css")
+        self.end_headers()
+
+        # open stylesheet in css subfolder
+        f = open(f"css/{stylesheet}", "r")
+        output = ""
+        for line in f:
+            output += (line.strip())
+        self.wfile.write(bytes(output, "utf-8"))
+        return
+
+        else:
+            filename = ""
+
+        if filename == "":
+            self.send_response(404)
+            self.end_headers()
+        else:
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+
+            f = open(filename, "r")
+            output = ""
+            for line in f:
+                output += (line.strip())
+
+            films = db.GetData("select film_id, title, description from film")
+            films_html = functions.DicttoHTML_Films(films)
+            output = output.replace("$$films$$", films_html)
+
+            self.wfile.write(bytes(output, "utf-8"))
+
+
+
 
 
 if __name__ == "__main__":
